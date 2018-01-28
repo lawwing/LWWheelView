@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">WheelLib</string>
+    <string name="ycuwq_datepicker_cancel">Cancel</string>
+    <string name="ycuew_datepicker_decide">Decide</string>
+    <string name="ycuwq_datepicker_hour">H</string>
+    <string name="ycuew_datepicker_minute">m</string>
+</resources>
