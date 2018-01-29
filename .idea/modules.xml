@@ -3,7 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LWWheelView.iml" filepath="$PROJECT_DIR$/LWWheelView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LWWheelView.iml" filepath="$PROJECT_DIR$/LWWheelView.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/wheellib/wheellib.iml" filepath="$PROJECT_DIR$/wheellib/wheellib.iml" />
       <module fileurl="file://$PROJECT_DIR$/wheellib/wheellib.iml" filepath="$PROJECT_DIR$/wheellib/wheellib.iml" />
     </modules>
   </component>

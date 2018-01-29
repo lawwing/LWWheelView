@@ -1,11 +1,11 @@
 package cn.lawwing.wheellib.speed;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import cn.lawwing.wheellib.LWWheelView;
 
@@ -14,18 +14,20 @@ import cn.lawwing.wheellib.LWWheelView;
  */
 
 public class SpeedWheelView extends LWWheelView<String> {
+    private OnSpeedSelectedListener onSpeedSelectedListener;
+
     public SpeedWheelView(Context context) {
         this(context, null);
     }
 
     public SpeedWheelView(Context context, @Nullable AttributeSet attrs) {
-        this(context, null, 0);
+        this(context, attrs, 0);
     }
 
     public SpeedWheelView(Context context, @Nullable AttributeSet attrs,
                           int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setItemMaximumWidthText("0000");
+        setItemMaximumWidthText("X 1.0");
         updateSpeed();
         setSelectedSpeed(0, false);
         setOnWheelChangeListener(new OnWheelChangeListener<String>() {
@@ -50,7 +52,6 @@ public class SpeedWheelView extends LWWheelView<String> {
         setDataList(list);
     }
 
-    private OnSpeedSelectedListener onSpeedSelectedListener;
 
     public void setOnSpeedSelectedListener(OnSpeedSelectedListener onSpeedSelectedListener) {
         this.onSpeedSelectedListener = onSpeedSelectedListener;

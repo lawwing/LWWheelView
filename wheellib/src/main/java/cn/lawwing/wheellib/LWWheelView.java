@@ -1,8 +1,5 @@
 package cn.lawwing.wheellib;
 
-import java.text.Format;
-import java.util.List;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -15,217 +12,214 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Scroller;
 
+import java.text.Format;
+import java.util.List;
+
 import cn.lawwing.wheellib.utils.LinearGradient;
 
 /**
  * Created by lawwing on 2018/1/28.
  */
-@SuppressWarnings({ "FieldCanBeLocal", "unused", "SameParameterValue" })
-public class LWWheelView<T> extends View
-{
+@SuppressWarnings({"FieldCanBeLocal", "unused", "SameParameterValue"})
+public class LWWheelView<T> extends View {
     private final String TAG = "LWWheelView";
-    
+
     /**
      * 数据集合
      */
     private List<T> mDataList;
-    
+
     private Format mDataFormat;
-    
+
     /**
      * Item的Text的颜色
      */
     @ColorInt
     private int mTextColor;
-    
+
     /**
      * 字体大小
      */
     private int mTextSize;
-    
+
     /**
      * 是否开启字体渐变，开启后越靠近边缘，字体越模糊
      */
     private boolean mIsTextGradual;
-    
+
     /**
      * 选中的Item的Text颜色
      */
     @ColorInt
     private int mSelectedItemTextColor;
-    
+
     /**
      * 选中的Item的Text大小
      */
     private int mSelectedItemTextSize;
-    
+
     /**
      * 指示器文字 会在中心文字后边多绘制一个文字。
      */
     private String mIndicatorText;
-    
+
     /**
      * 指示器文字颜色
      */
     @ColorInt
     private int mIndicatorTextColor;
-    
+
     /**
      * 指示器文字大小
      */
     private int mIndicatorTextSize;
-    
+
     private Paint mPaint;
-    
+
     /**
      * 最大的一个Item的文本的宽高
      */
     private int mTextMaxWidth, mTextMaxHeight;
-    
+
     /**
      * 输入的一段文字，可以用来测量 mTextMaxWidth
      */
     private String mItemMaximumWidthText;
-    
+
     /**
      * 显示的Item一半的数量（中心Item上下两边分别的数量） 总显示的数量为 mHalfVisibleItemCount * 2 + 1
      */
     private int mHalfVisibleItemCount;
-    
+
     /**
      * 两个Item之间的高度间隔
      */
     private int mItemHeightSpace, mItemWidthSpace;
-    
+
     private int mItemHeight;
-    
+
     /**
      * 当前的Item的位置
      */
     private int mCurrentPosition;
-    
+
     /**
      * 是否将中间的Item放大
      */
     private boolean mIsZoomInSelectedItem;
-    
+
     /**
      * 是否显示幕布，中央Item会遮盖一个颜色颜色
      */
     private boolean mIsShowCurtain;
-    
+
     /**
      * 幕布颜色
      */
     @ColorInt
     private int mCurtainColor;
-    
+
     /**
      * 是否显示幕布的边框
      */
     private boolean mIsShowCurtainBorder;
-    
+
     /**
      * 幕布边框的颜色
      */
     @ColorInt
     private int mCurtainBorderColor;
-    
+
     /**
      * 整个控件的可绘制面积
      */
     private Rect mDrawnRect;
-    
+
     /**
      * 中心被选中的Item的坐标矩形
      */
     private Rect mSelectedItemRect;
-    
+
     /**
      * 第一个Item的绘制Text的坐标
      */
     private int mFirstItemDrawX, mFirstItemDrawY;
-    
+
     /**
      * 中心的Item绘制text的Y轴坐标
      */
     private int mCenterItemDrawnY;
-    
+
     private Scroller mScroller;
-    
+
     private int mTouchSlop;
-    
+
     /**
      * 该标记的作用是，令mTouchSlop仅在一个滑动过程中生效一次。
      */
     private boolean mTouchSlopFlag;
-    
+
     private VelocityTracker mTracker;
-    
+
     private int mTouchDownY;
-    
+
     /**
      * Y轴Scroll滚动的位移
      */
     private int mScrollOffsetY;
-    
+
     /**
      * 最后手指Down事件的Y轴坐标，用于计算拖动距离
      */
     private int mLastDownY;
-    
+
     /**
      * 是否循环读取
      */
     private boolean mIsCyclic = true;
-    
+
     /**
      * 最大可以Fling的距离
      */
     private int mMaxFlingY, mMinFlingY;
-    
+
     /**
      * 滚轮滑动时的最小/最大速度
      */
     private int mMinimumVelocity = 50, mMaximumVelocity = 12000;
-    
+
     /**
      * 是否是手动停止滚动
      */
     private boolean mIsAbortScroller;
-    
+
     private LinearGradient mLinearGradient;
-    
+
     private Handler mHandler = new Handler();
-    
+
     private OnWheelChangeListener<T> mOnWheelChangeListener;
-    
-    private Runnable mScrollerRunnable = new Runnable()
-    {
+
+    private Runnable mScrollerRunnable = new Runnable() {
         @Override
-        public void run()
-        {
-            
-            if (mScroller.computeScrollOffset())
-            {
+        public void run() {
+
+            if (mScroller.computeScrollOffset()) {
                 int scrollerCurrY = mScroller.getCurrY();
-                if (mIsCyclic)
-                {
+                if (mIsCyclic) {
                     int visibleItemCount = 2 * mHalfVisibleItemCount + 1;
-                    
-                    while (scrollerCurrY > visibleItemCount * mItemHeight)
-                    {
+
+                    while (scrollerCurrY > visibleItemCount * mItemHeight) {
                         scrollerCurrY -= mDataList.size() * mItemHeight;
                     }
                     while (scrollerCurrY < -(visibleItemCount
-                            + mDataList.size()) * mItemHeight)
-                    {
+                            + mDataList.size()) * mItemHeight) {
                         scrollerCurrY += mDataList.size() * mItemHeight;
                     }
                 }
@@ -233,31 +227,24 @@ public class LWWheelView<T> extends View
                 postInvalidate();
                 mHandler.postDelayed(this, 16);
             }
-            if (mScroller.isFinished())
-            {
-                if (mOnWheelChangeListener == null)
-                {
+            if (mScroller.isFinished()) {
+                if (mOnWheelChangeListener == null) {
                     return;
                 }
-                if (mItemHeight == 0)
-                {
+                if (mItemHeight == 0) {
                     return;
                 }
                 int position = -mScrollOffsetY / mItemHeight;
-                if (mIsCyclic)
-                {
+                if (mIsCyclic) {
                     // 当是循环状态时，根据循环效果的实现机制，mScrollOffsetY会超过list的大小，这里将position修正。
-                    while (position >= mDataList.size())
-                    {
+                    while (position >= mDataList.size()) {
                         position -= mDataList.size();
                     }
-                    while (position < 0)
-                    {
+                    while (position < 0) {
                         position += mDataList.size();
                     }
                 }
-                if (mCurrentPosition != position)
-                {
+                if (mCurrentPosition != position) {
                     mOnWheelChangeListener
                             .onWheelSelected(mDataList.get(position), position);
                 }
@@ -265,20 +252,17 @@ public class LWWheelView<T> extends View
             }
         }
     };
-    
-    public LWWheelView(Context context)
-    {
+
+    public LWWheelView(Context context) {
         this(context, null);
     }
-    
-    public LWWheelView(Context context, @Nullable AttributeSet attrs)
-    {
+
+    public LWWheelView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
-    
+
     public LWWheelView(Context context, @Nullable AttributeSet attrs,
-            int defStyleAttr)
-    {
+                       int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initAttrs(context, attrs);
         initPaint();
@@ -287,15 +271,13 @@ public class LWWheelView<T> extends View
         mDrawnRect = new Rect();
         mSelectedItemRect = new Rect();
         mScroller = new Scroller(context);
-        
+
         ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop();
     }
-    
-    private void initAttrs(Context context, @Nullable AttributeSet attrs)
-    {
-        if (attrs == null)
-        {
+
+    private void initAttrs(Context context, @Nullable AttributeSet attrs) {
+        if (attrs == null) {
             return;
         }
         TypedArray a = context.obtainStyledAttributes(attrs,
@@ -350,35 +332,29 @@ public class LWWheelView<T> extends View
                 mTextSize);
         a.recycle();
     }
-    
-    public void computeTextSize()
-    {
+
+    public void computeTextSize() {
         mTextMaxWidth = mTextMaxHeight = 0;
-        if (mDataList.size() == 0)
-        {
+        if (mDataList.size() == 0) {
             return;
         }
-        
+
         // 这里使用最大的,防止文字大小超过布局大小。
         mPaint.setTextSize(
                 mSelectedItemTextSize > mTextSize ? mSelectedItemTextSize
                         : mTextSize);
-        
-        if (!TextUtils.isEmpty(mItemMaximumWidthText))
-        {
+
+        if (!TextUtils.isEmpty(mItemMaximumWidthText)) {
             mTextMaxWidth = (int) mPaint.measureText(mItemMaximumWidthText);
-        }
-        else
-        {
+        } else {
             mTextMaxWidth = (int) mPaint
                     .measureText(mDataList.get(0).toString());
         }
         Paint.FontMetrics metrics = mPaint.getFontMetrics();
         mTextMaxHeight = (int) (metrics.bottom - metrics.top);
     }
-    
-    private void initPaint()
-    {
+
+    private void initPaint() {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG
                 | Paint.LINEAR_TEXT_FLAG);
         mPaint.setStyle(Paint.Style.FILL);
@@ -386,58 +362,51 @@ public class LWWheelView<T> extends View
         mPaint.setColor(mTextColor);
         mPaint.setTextSize(mSelectedItemTextSize);
     }
-    
+
     /**
      * 计算实际的大小
-     * 
+     *
      * @param specMode 测量模式
      * @param specSize 测量的大小
-     * @param size 需要的大小
+     * @param size     需要的大小
      * @return 返回的数值
      */
-    private int measureSize(int specMode, int specSize, int size)
-    {
-        if (specMode == MeasureSpec.EXACTLY)
-        {
+    private int measureSize(int specMode, int specSize, int size) {
+        if (specMode == MeasureSpec.EXACTLY) {
             return specSize;
-        }
-        else
-        {
+        } else {
             return Math.min(specSize, size);
         }
     }
-    
+
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-    {
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int specWidthSize = MeasureSpec.getSize(widthMeasureSpec);
         int specWidthMode = MeasureSpec.getMode(widthMeasureSpec);
         int specHeightSize = MeasureSpec.getSize(heightMeasureSpec);
         int specHeightMode = MeasureSpec.getMode(heightMeasureSpec);
-        
+
         int width = mTextMaxWidth + mItemWidthSpace;
         int height = (mTextMaxHeight + mItemHeightSpace)
                 * getVisibleItemCount();
-        
+
         width += getPaddingLeft() + getPaddingRight();
         height += getPaddingTop() + getPaddingBottom();
         setMeasuredDimension(measureSize(specWidthMode, specWidthSize, width),
                 measureSize(specHeightMode, specHeightSize, height));
     }
-    
+
     /**
      * 计算Fling极限 如果为Cyclic模式则为Integer的极限值，如果正常模式，则为一整个数据集的上下限。
      */
-    private void computeFlingLimitY()
-    {
+    private void computeFlingLimitY() {
         mMinFlingY = mIsCyclic ? Integer.MIN_VALUE
                 : -mItemHeight * (mDataList.size() - 1);
         mMaxFlingY = mIsCyclic ? Integer.MAX_VALUE : 0;
     }
-    
+
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh)
-    {
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         mDrawnRect.set(getPaddingLeft(),
                 getPaddingTop(),
@@ -455,23 +424,20 @@ public class LWWheelView<T> extends View
         computeFlingLimitY();
         mCenterItemDrawnY = mFirstItemDrawY
                 + mItemHeight * mHalfVisibleItemCount;
-        
+
         mScrollOffsetY = -mItemHeight * mCurrentPosition;
     }
-    
+
     @Override
-    protected void onDraw(Canvas canvas)
-    {
+    protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         mPaint.setTextAlign(Paint.Align.CENTER);
-        if (mIsShowCurtain)
-        {
+        if (mIsShowCurtain) {
             mPaint.setStyle(Paint.Style.FILL);
             mPaint.setColor(mCurtainColor);
             canvas.drawRect(mSelectedItemRect, mPaint);
         }
-        if (mIsShowCurtainBorder)
-        {
+        if (mIsShowCurtainBorder) {
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setColor(mCurtainBorderColor);
             canvas.drawRect(mSelectedItemRect, mPaint);
@@ -482,118 +448,99 @@ public class LWWheelView<T> extends View
         // 首尾各多绘制一个用于缓冲
         for (int drawDataPos = drawnSelectedPos - mHalfVisibleItemCount
                 - 1; drawDataPos <= drawnSelectedPos + mHalfVisibleItemCount
-                        + 1; drawDataPos++)
-        {
+                + 1; drawDataPos++) {
             int pos = drawDataPos;
-            if (mIsCyclic)
-            {
-                if (pos < 0)
-                {
+            if (mIsCyclic) {
+                if (pos < 0) {
                     // 将数据集限定在0 ~ mDataList.size()-1之间
                     pos = mDataList.size() + (pos % 10);
-                    
-                }
-                else
-                {
+                } else {
                     // 将数据集限定在0 ~ mDataList.size()-1之间
                     pos = pos % mDataList.size();
                 }
-            }
-            else
-            {
-                if (pos < 0 || pos > mDataList.size() - 1)
-                {
+            } else {
+                if (pos < 0 || pos > mDataList.size() - 1) {
                     continue;
                 }
             }
             // 在中间位置的Item作为被选中的。
-            if (drawnSelectedPos == drawDataPos)
-            {
+            if (drawnSelectedPos == drawDataPos) {
                 mPaint.setColor(mSelectedItemTextColor);
-            }
-            else
-            {
+            } else {
                 mPaint.setColor(mTextColor);
             }
-            
-            T data = mDataList.get(pos);
+            T data;
+            try {
+                data = mDataList.get(pos);
+            } catch (Exception e) {
+                Log.e("lawwing", "pos::" + pos);
+                if (pos < -mDataList.size()) {
+                    pos = pos % mDataList.size() - 1;
+                }
+                if (pos >= mDataList.size()) {
+                    pos = pos % mDataList.size() - 1;
+                }
+                data = mDataList.get(mDataList.size() + pos);
+            }
+
             int itemDrawY = mFirstItemDrawY
                     + (drawDataPos + mHalfVisibleItemCount) * mItemHeight
                     + mScrollOffsetY;
             // 距离中心的Y轴距离
             int distanceY = Math.abs(mCenterItemDrawnY - itemDrawY);
-            
-            if (mIsTextGradual)
-            {
+
+            if (mIsTextGradual) {
                 // 计算文字颜色渐变
                 // 文字颜色渐变要在设置透明度上边，否则会被覆盖
-                if (distanceY < mItemHeight)
-                {
+                if (distanceY < mItemHeight) {
                     float colorRatio = 1 - (distanceY / (float) mItemHeight);
                     mPaint.setColor(mLinearGradient.getColor(colorRatio));
-                }
-                else
-                {
+                } else {
                     mPaint.setColor(mTextColor);
                 }
                 // 计算透明度渐变
                 float alphaRatio;
-                if (itemDrawY > mCenterItemDrawnY)
-                {
+                if (itemDrawY > mCenterItemDrawnY) {
                     alphaRatio = (mDrawnRect.height() - itemDrawY)
                             / (float) (mDrawnRect.height()
-                                    - (mCenterItemDrawnY));
-                }
-                else
-                {
+                            - (mCenterItemDrawnY));
+                } else {
                     alphaRatio = itemDrawY / (float) mCenterItemDrawnY;
                 }
-                
+
                 alphaRatio = alphaRatio < 0 ? 0 : alphaRatio;
                 mPaint.setAlpha((int) (alphaRatio * 255));
-            }
-            else
-            {
+            } else {
                 mPaint.setAlpha(255);
                 mPaint.setColor(mSelectedItemTextColor);
             }
-            
+
             // 开启此选项,会将越靠近中心的Item字体放大
-            if (mIsZoomInSelectedItem)
-            {
-                if (distanceY < mItemHeight)
-                {
+            if (mIsZoomInSelectedItem) {
+                if (distanceY < mItemHeight) {
                     float addedSize = (mItemHeight - distanceY)
                             / (float) mItemHeight
                             * (mSelectedItemTextSize - mTextSize);
                     mPaint.setTextSize(mTextSize + addedSize);
-                }
-                else
-                {
+                } else {
                     mPaint.setTextSize(mTextSize);
                 }
-            }
-            else
-            {
+            } else {
                 mPaint.setTextSize(mTextSize);
             }
-            if (mDataFormat != null)
-            {
+            if (mDataFormat != null) {
                 canvas.drawText(mDataFormat.format(data),
                         mFirstItemDrawX,
                         itemDrawY,
                         mPaint);
-            }
-            else
-            {
+            } else {
                 canvas.drawText(data.toString(),
                         mFirstItemDrawX,
                         itemDrawY,
                         mPaint);
             }
         }
-        if (!TextUtils.isEmpty(mIndicatorText))
-        {
+        if (!TextUtils.isEmpty(mIndicatorText)) {
             mPaint.setColor(mIndicatorTextColor);
             mPaint.setTextSize(mIndicatorTextSize);
             mPaint.setTextAlign(Paint.Align.LEFT);
@@ -603,25 +550,19 @@ public class LWWheelView<T> extends View
                     mPaint);
         }
     }
-    
+
     @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        if (mTracker == null)
-        {
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mTracker == null) {
             mTracker = VelocityTracker.obtain();
         }
         mTracker.addMovement(event);
-        switch (event.getAction())
-        {
+        switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (!mScroller.isFinished())
-                {
+                if (!mScroller.isFinished()) {
                     mScroller.abortAnimation();
                     mIsAbortScroller = true;
-                }
-                else
-                {
+                } else {
                     mIsAbortScroller = false;
                 }
                 mTracker.clear();
@@ -630,8 +571,7 @@ public class LWWheelView<T> extends View
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mTouchSlopFlag
-                        && Math.abs(mTouchDownY - event.getY()) < mTouchSlop)
-                {
+                        && Math.abs(mTouchDownY - event.getY()) < mTouchSlop) {
                     break;
                 }
                 mTouchSlopFlag = false;
@@ -641,21 +581,17 @@ public class LWWheelView<T> extends View
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
-                if (!mIsAbortScroller && mTouchDownY == mLastDownY)
-                {
+                if (!mIsAbortScroller && mTouchDownY == mLastDownY) {
                     performClick();
-                    if (event.getY() > mSelectedItemRect.bottom)
-                    {
+                    if (event.getY() > mSelectedItemRect.bottom) {
                         int scrollItem = (int) (event.getY()
                                 - mSelectedItemRect.bottom) / mItemHeight + 1;
                         mScroller.startScroll(0,
                                 mScrollOffsetY,
                                 0,
                                 -scrollItem * mItemHeight);
-                        
-                    }
-                    else if (event.getY() < mSelectedItemRect.top)
-                    {
+
+                    } else if (event.getY() < mSelectedItemRect.top) {
                         int scrollItem = (int) (mSelectedItemRect.top
                                 - event.getY()) / mItemHeight + 1;
                         mScroller.startScroll(0,
@@ -663,13 +599,10 @@ public class LWWheelView<T> extends View
                                 0,
                                 scrollItem * mItemHeight);
                     }
-                }
-                else
-                {
+                } else {
                     mTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int velocity = (int) mTracker.getYVelocity();
-                    if (Math.abs(velocity) > mMinimumVelocity)
-                    {
+                    if (Math.abs(velocity) > mMinimumVelocity) {
                         mScroller.fling(0,
                                 mScrollOffsetY,
                                 0,
@@ -680,10 +613,8 @@ public class LWWheelView<T> extends View
                                 mMaxFlingY);
                         mScroller.setFinalY(mScroller.getFinalY()
                                 + computeDistanceToEndPoint(
-                                        mScroller.getFinalY() % mItemHeight));
-                    }
-                    else
-                    {
+                                mScroller.getFinalY() % mItemHeight));
+                    } else {
                         mScroller.startScroll(0,
                                 mScrollOffsetY,
                                 0,
@@ -691,14 +622,10 @@ public class LWWheelView<T> extends View
                                         mScrollOffsetY % mItemHeight));
                     }
                 }
-                if (!mIsCyclic)
-                {
-                    if (mScroller.getFinalY() > mMaxFlingY)
-                    {
+                if (!mIsCyclic) {
+                    if (mScroller.getFinalY() > mMaxFlingY) {
                         mScroller.setFinalY(mMaxFlingY);
-                    }
-                    else if (mScroller.getFinalY() < mMinFlingY)
-                    {
+                    } else if (mScroller.getFinalY() < mMinFlingY) {
                         mScroller.setFinalY(mMinFlingY);
                     }
                 }
@@ -709,48 +636,36 @@ public class LWWheelView<T> extends View
         }
         return true;
     }
-    
+
     @Override
-    public boolean performClick()
-    {
+    public boolean performClick() {
         return super.performClick();
     }
-    
-    private int computeDistanceToEndPoint(int remainder)
-    {
-        if (Math.abs(remainder) > mItemHeight / 2)
-        {
-            if (mScrollOffsetY < 0)
-            {
+
+    private int computeDistanceToEndPoint(int remainder) {
+        if (Math.abs(remainder) > mItemHeight / 2) {
+            if (mScrollOffsetY < 0) {
                 return -mItemHeight - remainder;
-            }
-            else
-            {
+            } else {
                 return mItemHeight - remainder;
             }
-        }
-        else
-        {
+        } else {
             return -remainder;
         }
     }
-    
+
     public void setOnWheelChangeListener(
-            OnWheelChangeListener<T> onWheelChangeListener)
-    {
+            OnWheelChangeListener<T> onWheelChangeListener) {
         mOnWheelChangeListener = onWheelChangeListener;
     }
-    
-    public List<T> getDataList()
-    {
+
+    public List<T> getDataList() {
         return mDataList;
     }
-    
-    public void setDataList(@NonNull List<T> dataList)
-    {
+
+    public void setDataList(@NonNull List<T> dataList) {
         mDataList = dataList;
-        if (dataList.size() == 0)
-        {
+        if (dataList.size() == 0) {
             return;
         }
         computeTextSize();
@@ -758,208 +673,176 @@ public class LWWheelView<T> extends View
         requestLayout();
         postInvalidate();
     }
-    
-    public int getTextColor()
-    {
+
+    public int getTextColor() {
         return mTextColor;
     }
-    
+
     /**
      * 一般列表的文本颜色
-     * 
+     *
      * @param textColor 文本颜色
      */
-    public void setTextColor(@ColorInt int textColor)
-    {
-        if (mTextColor == textColor)
-        {
+    public void setTextColor(@ColorInt int textColor) {
+        if (mTextColor == textColor) {
             return;
         }
         mTextColor = textColor;
         postInvalidate();
     }
-    
-    public int getTextSize()
-    {
+
+    public int getTextSize() {
         return mTextSize;
     }
-    
+
     /**
      * 一般列表的文本大小
-     * 
+     *
      * @param textSize 文字大小
      */
-    public void setTextSize(int textSize)
-    {
-        if (mTextSize == textSize)
-        {
+    public void setTextSize(int textSize) {
+        if (mTextSize == textSize) {
             return;
         }
         mTextSize = textSize;
         postInvalidate();
     }
-    
-    public int getSelectedItemTextColor()
-    {
+
+    public int getSelectedItemTextColor() {
         return mSelectedItemTextColor;
     }
-    
+
     /**
      * 设置被选中时候的文本颜色
-     * 
+     *
      * @param selectedItemTextColor 文本颜色
      */
-    public void setSelectedItemTextColor(@ColorInt int selectedItemTextColor)
-    {
-        if (mSelectedItemTextColor == selectedItemTextColor)
-        {
+    public void setSelectedItemTextColor(@ColorInt int selectedItemTextColor) {
+        if (mSelectedItemTextColor == selectedItemTextColor) {
             return;
         }
         mSelectedItemTextColor = selectedItemTextColor;
         postInvalidate();
     }
-    
-    public int getSelectedItemTextSize()
-    {
+
+    public int getSelectedItemTextSize() {
         return mSelectedItemTextSize;
     }
-    
+
     /**
      * 设置被选中时候的文本大小
-     * 
+     *
      * @param selectedItemTextSize 文字大小
      */
-    public void setSelectedItemTextSize(int selectedItemTextSize)
-    {
-        if (mSelectedItemTextSize == selectedItemTextSize)
-        {
+    public void setSelectedItemTextSize(int selectedItemTextSize) {
+        if (mSelectedItemTextSize == selectedItemTextSize) {
             return;
         }
         mSelectedItemTextSize = selectedItemTextSize;
         postInvalidate();
     }
-    
-    public String getItemMaximumWidthText()
-    {
+
+    public String getItemMaximumWidthText() {
         return mItemMaximumWidthText;
     }
-    
+
     /**
      * 设置输入的一段文字，用来测量 mTextMaxWidth
-     * 
+     *
      * @param itemMaximumWidthText 文本内容
      */
-    public void setItemMaximumWidthText(String itemMaximumWidthText)
-    {
+    public void setItemMaximumWidthText(String itemMaximumWidthText) {
         mItemMaximumWidthText = itemMaximumWidthText;
         requestLayout();
         postInvalidate();
     }
-    
-    public int getHalfVisibleItemCount()
-    {
+
+    public int getHalfVisibleItemCount() {
         return mHalfVisibleItemCount;
     }
-    
+
     /**
      * 显示的个数等于上下两边Item的个数+ 中间的Item
      */
-    public int getVisibleItemCount()
-    {
+    public int getVisibleItemCount() {
         return mHalfVisibleItemCount * 2 + 1;
     }
-    
+
     /**
      * 设置显示数据量的个数的一半。 为保证总显示个数为奇数,这里将总数拆分，总数为 mHalfVisibleItemCount * 2 + 1
-     * 
+     *
      * @param halfVisibleItemCount 总数量的一半
      */
-    public void setHalfVisibleItemCount(int halfVisibleItemCount)
-    {
-        if (mHalfVisibleItemCount == halfVisibleItemCount)
-        {
+    public void setHalfVisibleItemCount(int halfVisibleItemCount) {
+        if (mHalfVisibleItemCount == halfVisibleItemCount) {
             return;
         }
         mHalfVisibleItemCount = halfVisibleItemCount;
         requestLayout();
     }
-    
-    public int getItemWidthSpace()
-    {
+
+    public int getItemWidthSpace() {
         return mItemWidthSpace;
     }
-    
-    public void setItemWidthSpace(int itemWidthSpace)
-    {
-        if (mItemWidthSpace == itemWidthSpace)
-        {
+
+    public void setItemWidthSpace(int itemWidthSpace) {
+        if (mItemWidthSpace == itemWidthSpace) {
             return;
         }
         mItemWidthSpace = itemWidthSpace;
         requestLayout();
     }
-    
-    public int getItemHeightSpace()
-    {
+
+    public int getItemHeightSpace() {
         return mItemHeightSpace;
     }
-    
+
     /**
      * 设置两个Item之间的间隔
-     * 
+     *
      * @param itemHeightSpace 间隔值
      */
-    public void setItemHeightSpace(int itemHeightSpace)
-    {
-        if (mItemHeightSpace == itemHeightSpace)
-        {
+    public void setItemHeightSpace(int itemHeightSpace) {
+        if (mItemHeightSpace == itemHeightSpace) {
             return;
         }
         mItemHeightSpace = itemHeightSpace;
         requestLayout();
     }
-    
-    public int getCurrentPosition()
-    {
+
+    public int getCurrentPosition() {
         return mCurrentPosition;
     }
-    
+
     /**
      * 设置当前选中的列表项,将滚动到所选位置
-     * 
+     *
      * @param currentPosition 设置的当前位置
      */
-    public void setCurrentPosition(int currentPosition)
-    {
+    public void setCurrentPosition(int currentPosition) {
         setCurrentPosition(currentPosition, true);
     }
-    
+
     /**
      * 设置当前选中的列表位置
-     * 
+     *
      * @param currentPosition 设置的当前位置
-     * @param smoothScroll 是否平滑滚动
+     * @param smoothScroll    是否平滑滚动
      */
-    public void setCurrentPosition(int currentPosition, boolean smoothScroll)
-    {
-        if (mCurrentPosition == currentPosition)
-        {
+    public void setCurrentPosition(int currentPosition, boolean smoothScroll) {
+        if (mCurrentPosition == currentPosition) {
             return;
         }
-        if (currentPosition > mDataList.size())
-        {
+        if (currentPosition > mDataList.size()) {
             currentPosition = mDataList.size() - 1;
         }
-        if (currentPosition < 0)
-        {
+        if (currentPosition < 0) {
             currentPosition = 0;
         }
-        if (!mScroller.isFinished())
-        {
+        if (!mScroller.isFinished()) {
             mScroller.abortAnimation();
         }
-        if (smoothScroll)
-        {
+        if (smoothScroll) {
             mScroller.startScroll(0,
                     mScrollOffsetY,
                     0,
@@ -968,224 +851,190 @@ public class LWWheelView<T> extends View
                     mScroller.getFinalY() + computeDistanceToEndPoint(
                             mScroller.getFinalY() % mItemHeight));
             mHandler.post(mScrollerRunnable);
-        }
-        else
-        {
+        } else {
             mCurrentPosition = currentPosition;
             mScrollOffsetY = -mItemHeight * mCurrentPosition;
             postInvalidate();
-            if (mOnWheelChangeListener != null)
-            {
+            if (mOnWheelChangeListener != null) {
                 mOnWheelChangeListener.onWheelSelected(
                         mDataList.get(currentPosition),
                         currentPosition);
             }
         }
     }
-    
-    public boolean isZoomInSelectedItem()
-    {
+
+    public boolean isZoomInSelectedItem() {
         return mIsZoomInSelectedItem;
     }
-    
-    public void setZoomInSelectedItem(boolean zoomInSelectedItem)
-    {
-        if (mIsZoomInSelectedItem == zoomInSelectedItem)
-        {
+
+    public void setZoomInSelectedItem(boolean zoomInSelectedItem) {
+        if (mIsZoomInSelectedItem == zoomInSelectedItem) {
             return;
         }
         mIsZoomInSelectedItem = zoomInSelectedItem;
         postInvalidate();
     }
-    
-    public boolean isCyclic()
-    {
+
+    public boolean isCyclic() {
         return mIsCyclic;
     }
-    
+
     /**
      * 设置是否循环滚动。
-     * 
+     *
      * @param cyclic 上下边界是否相邻
      */
-    public void setCyclic(boolean cyclic)
-    {
-        if (mIsCyclic == cyclic)
-        {
+    public void setCyclic(boolean cyclic) {
+        if (mIsCyclic == cyclic) {
             return;
         }
         mIsCyclic = cyclic;
         computeFlingLimitY();
         requestLayout();
     }
-    
-    public int getMinimumVelocity()
-    {
+
+    public int getMinimumVelocity() {
         return mMinimumVelocity;
     }
-    
+
     /**
      * 设置最小滚动速度,如果实际速度小于此速度，将不会触发滚动。
-     * 
+     *
      * @param minimumVelocity 最小速度
      */
-    public void setMinimumVelocity(int minimumVelocity)
-    {
+    public void setMinimumVelocity(int minimumVelocity) {
         mMinimumVelocity = minimumVelocity;
     }
-    
-    public int getMaximumVelocity()
-    {
+
+    public int getMaximumVelocity() {
         return mMaximumVelocity;
     }
-    
+
     /**
      * 设置最大滚动的速度,实际滚动速度的上限
-     * 
+     *
      * @param maximumVelocity 最大滚动速度
      */
-    public void setMaximumVelocity(int maximumVelocity)
-    {
+    public void setMaximumVelocity(int maximumVelocity) {
         mMaximumVelocity = maximumVelocity;
     }
-    
-    public boolean isTextGradual()
-    {
+
+    public boolean isTextGradual() {
         return mIsTextGradual;
     }
-    
+
     /**
      * 设置文字渐变，离中心越远越淡。
-     * 
+     *
      * @param textGradual 是否渐变
      */
-    public void setTextGradual(boolean textGradual)
-    {
-        if (mIsTextGradual == textGradual)
-        {
+    public void setTextGradual(boolean textGradual) {
+        if (mIsTextGradual == textGradual) {
             return;
         }
         mIsTextGradual = textGradual;
         postInvalidate();
     }
-    
-    public boolean isShowCurtain()
-    {
+
+    public boolean isShowCurtain() {
         return mIsShowCurtain;
     }
-    
+
     /**
      * 设置中心Item是否有幕布遮盖
-     * 
+     *
      * @param showCurtain 是否有幕布
      */
-    public void setShowCurtain(boolean showCurtain)
-    {
-        if (mIsShowCurtain == showCurtain)
-        {
+    public void setShowCurtain(boolean showCurtain) {
+        if (mIsShowCurtain == showCurtain) {
             return;
         }
         mIsShowCurtain = showCurtain;
         postInvalidate();
     }
-    
-    public int getCurtainColor()
-    {
+
+    public int getCurtainColor() {
         return mCurtainColor;
     }
-    
+
     /**
      * 设置幕布颜色
-     * 
+     *
      * @param curtainColor 幕布颜色
      */
-    public void setCurtainColor(@ColorInt int curtainColor)
-    {
-        if (mCurtainColor == curtainColor)
-        {
+    public void setCurtainColor(@ColorInt int curtainColor) {
+        if (mCurtainColor == curtainColor) {
             return;
         }
         mCurtainColor = curtainColor;
         postInvalidate();
     }
-    
-    public boolean isShowCurtainBorder()
-    {
+
+    public boolean isShowCurtainBorder() {
         return mIsShowCurtainBorder;
     }
-    
+
     /**
      * 设置幕布是否显示边框
-     * 
+     *
      * @param showCurtainBorder 是否有幕布边框
      */
-    public void setShowCurtainBorder(boolean showCurtainBorder)
-    {
-        if (mIsShowCurtainBorder == showCurtainBorder)
-        {
+    public void setShowCurtainBorder(boolean showCurtainBorder) {
+        if (mIsShowCurtainBorder == showCurtainBorder) {
             return;
         }
         mIsShowCurtainBorder = showCurtainBorder;
         postInvalidate();
     }
-    
-    public int getCurtainBorderColor()
-    {
+
+    public int getCurtainBorderColor() {
         return mCurtainBorderColor;
     }
-    
+
     /**
      * 幕布边框的颜色
-     * 
+     *
      * @param curtainBorderColor 幕布边框颜色
      */
-    public void setCurtainBorderColor(@ColorInt int curtainBorderColor)
-    {
-        if (mCurtainBorderColor == curtainBorderColor)
-        {
+    public void setCurtainBorderColor(@ColorInt int curtainBorderColor) {
+        if (mCurtainBorderColor == curtainBorderColor) {
             return;
         }
         mCurtainBorderColor = curtainBorderColor;
         postInvalidate();
     }
-    
-    public void setIndicatorText(String indicatorText)
-    {
+
+    public void setIndicatorText(String indicatorText) {
         mIndicatorText = indicatorText;
         postInvalidate();
     }
-    
-    public void setIndicatorTextColor(int indicatorTextColor)
-    {
+
+    public void setIndicatorTextColor(int indicatorTextColor) {
         mIndicatorTextColor = indicatorTextColor;
         postInvalidate();
     }
-    
-    public void setIndicatorTextSize(int indicatorTextSize)
-    {
+
+    public void setIndicatorTextSize(int indicatorTextSize) {
         mIndicatorTextSize = indicatorTextSize;
         postInvalidate();
     }
-    
+
     /**
      * 设置数据集格式
-     * 
+     *
      * @param dataFormat 格式
      */
-    public void setDataFormat(Format dataFormat)
-    {
+    public void setDataFormat(Format dataFormat) {
         mDataFormat = dataFormat;
         postInvalidate();
     }
-    
-    public Format getDataFormat()
-    {
+
+    public Format getDataFormat() {
         return mDataFormat;
     }
-    
-    public interface OnWheelChangeListener<T>
-    {
+
+    public interface OnWheelChangeListener<T> {
         void onWheelSelected(T item, int position);
     }
-    
+
 }
